@@ -1,6 +1,11 @@
 # Yeh-Sun Lee, Nels Schimek, Yenni Lee
 # Analysis of the Prevalence of Anxiety in the World
 
+
+# In terminal install:
+# pip install graphviz
+# pip install country-converter
+
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
@@ -15,12 +20,12 @@ from sklearn.tree import export_graphviz
 from IPython.display import display
 from sklearn import tree
 
-!pip install--upgrade geopandas
-!pip install--upgrade descartes
-!pip install country_converter--upgrade
-!pip install--upgrade scikit-learn
-!pip install cython
-!unzip data.zip
+# !pip install--upgrade geopandas
+# !pip install--upgrade descartes
+# !pip install country_converter--upgrade
+# !pip install--upgrade scikit-learn
+# !pip install cython
+# !unzip data.zip
 
 
 def save_file(url, file_name):
@@ -29,16 +34,25 @@ def save_file(url, file_name):
         f.write(r.content)
 
 
+# Saving file from url file source -- for Colab work
+"""
 save_file('https://courses.cs.washington.edu/courses/cse163/19sp/' +
           'files/lectures/05-13/data.zip', 'data.zip')
 save_file('https://courses.cs.washington.edu/courses/cse163/19sp/' +
           'files/lectures/05-13/gz_2010_us_040_00_5m.json',
           'gz_2010_us_040_00_5m.json')
+"""
 
-"""# Merge Anxiety and Geometry Data"""
+
+""" # Merge Anxiety and Geometry Data """
 
 
 def shorter_names(column):
+    """
+    Takes in a country column names and changes all countries to their
+    shorter names.
+    Returns the column with the shorter names.
+    """
     cc = coco.CountryConverter()
     column = column.map(lambda x: cc.convert(names=x, to='name_short'))
     return column
@@ -58,8 +72,7 @@ def merge_data(anxiety, countries):
     return merged
 
 
-"""# Question 1
-
+""" # Question 1
 How has the prevalence of anxiety changed from 2000 to 2017 for each
 continent, country, and gender?
 """
@@ -122,12 +135,12 @@ def prev_per_gender(data):
     both_prev['year'] = both_prev['year'].astype(str)
 
     fig, [ax1, ax2] = plt.subplots(2, figsize=(10, 10))
-    f_prev = sns.lineplot(ax=ax1, x='year', y='val', data=female_prev,
-                          color='orange', label='Female')
-    m_prev = sns.lineplot(ax=ax1, x='year', y='val', data=male_prev,
-                          color='green', label='Male')
-    b_prev = sns.lineplot(ax=ax2, x='year', y='val', data=both_prev,
-                          label="Both Sexes")
+    sns.lineplot(ax=ax1, x='year', y='val', data=female_prev,
+                 color='orange', label='Female')
+    sns.lineplot(ax=ax1, x='year', y='val', data=male_prev,
+                 color='green', label='Male')
+    sns.lineplot(ax=ax2, x='year', y='val', data=both_prev,
+                 label="Both Sexes")
     plt.subplots_adjust(hspace=0.5)
     ax1.set_title('Prevalence of Anxiety in Males and Females (2000 - 2017)')
     ax2.set_title('Prevalence of Anxiety in Both Sexes (2000 - 2017)')
@@ -137,8 +150,7 @@ def prev_per_gender(data):
     plt.savefig('gender_prev.png')
 
 
-"""# Question 2
-
+""" # Question 2
 For both continental and gender groups, are there specific ages when people
 begin or stop feeling anxiety?
 """
@@ -155,8 +167,8 @@ def continents_by_gender_group(data):
                            'val']]
     # groups dataset by unique combinations of continent and age and sums the
     # prevalence of anxiety for each of the combinations (both genders)
-    by_continent = continent_data.groupby(['CONTINENT', 'age'], sort=False)\\
-        ['val'].sum()
+    by_continent = continent_data.groupby(['CONTINENT', 'age'],
+                                          sort=False)['val'].sum()
     # reset_index creates a dataframe from the resulting grouped-by series
     by_continent = by_continent.reset_index()
     # filters continent_data for male data
@@ -225,8 +237,8 @@ def continents_by_age_group(data):
     one is from.
     '''
     # filters dataset for relevant columns
-    continent_data = merged[['location', 'year', 'CONTINENT', 'sex', 'age',
-                             'val']]
+    continent_data = data[['location', 'year', 'CONTINENT', 'sex', 'age',
+                           'val']]
     # groups dataset by unique combinations of continent, year, and age and
     # sums the prevalence of anxiety for each of the combinations
     by_continents = continent_data.groupby(['CONTINENT', 'year', 'age'],
@@ -261,8 +273,9 @@ def continents_by_age_group(data):
     # figure above
     green = sns.light_palette("green", as_cmap=True)
     # plots first graph of anxiety by age groups in North America
-    north_america_plot = sns.lineplot(data=asia, sort=False, x='age', y='val',
-                                      hue='year', ax=ax3, palette=green)
+    north_america_plot = sns.lineplot(data=north_america, sort=False, x='age',
+                                      y='val', hue='year', ax=ax3,
+                                      palette=green)
     # title for third graph
     north_america_plot.set_title('North America\'s Anxiety Per Age Group' +
                                  'Per Year')
@@ -277,8 +290,8 @@ def continents_by_age_group(data):
                                       y='val', hue='year', ax=ax4,
                                       palette=red)
     # title for fourth graph
-    south_america_plot.set_title('South America\'s Anxiety Per Age Group Per\
-                                  Year')
+    south_america_plot.set_title(
+        'South America\'s Anxiety Per Age Group Per Year')
     # filters dataset for data pertaining to Africa
     africa = by_continents[by_continents['CONTINENT'] == 'Africa']
     # creates a color palette for the Africa plot, matching the figure above
@@ -449,8 +462,7 @@ def anxiety_in_us_by_gender(data):
     plt.savefig('anxiety_in_us_gender.png')
 
 
-"""# Question 3
-
+""" # Question 3
 What does the future of anxiety prevalence look like in the US?
 """
 
@@ -467,7 +479,7 @@ def future_anxiety_prevelance(anxiety):
 
     # Data set using all features
     usa_all = usa.groupby(['year', 'age', 'sex'])['val'].sum()
-    usa_all = usa_all.reset_index() 
+    usa_all = usa_all.reset_index()
     usa_all['year'] = usa_all['year'].astype('int')
     # Data to create model
     usa_all_train = usa_all[usa_all['year'] < 2015]
@@ -621,13 +633,16 @@ def max_val_tests(X_tuning, y_tuning):
 
 def main():
     # read datasets for anxiety and countries
-    url = 'https://raw.githubusercontent.com/yennilee2/cse163/master/\
-    IHME-GBD_2017_DATA-1891f182-1.csv'
+    # (longer urls are for Colab)
+    # url = 'https://raw.githubusercontent.com/yennilee2/cse163/master/\
+    # IHME-GBD_2017_DATA-1891f182-1.csv'
+    url = 'IHME-GBD_2017_DATA-1891f182-1.csv'
     anxiety = pd.read_csv(url)
-    url_2 = 'https://raw.githubusercontent.com/yennilee2/cse163/master/\
-    IHME-GBD_2017_DATA-0047122b-1.csv'
+    # url_2 = 'https://raw.githubusercontent.com/yennilee2/cse163/master/\
+    # IHME-GBD_2017_DATA-0047122b-1.csv'
+    url_2 = 'IHME-GBD_2017_DATA-0047122b-1.csv'
     small_anxiety = pd.read_csv(url_2)
-    countries = gpd.read_file('/content/data/ne_110m_admin_0_countries.shp')
+    countries = gpd.read_file('data/ne_110m_admin_0_countries.shp')
 
     # merge dataset using merge_data function
     merged = merge_data(anxiety, countries)
